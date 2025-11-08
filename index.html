@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>一份神秘礼物🍊</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+        body {
+            background: #f0f5f9;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .modal-header .icon {
+            margin-right: 8px;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-confirm {
+            background: #007bff;
+            color: white;
+            margin-left: 10px;
+        }
+        .card-container {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .card {
+            position: absolute;
+            width: 200px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 1;
+            transform-origin: center center;
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+        @keyframes jellyPop {
+            0% { transform: rotate(var(--rotate-init)) scale(1); }
+            30% { transform: rotate(var(--rotate-mid)) scale(1.2); }
+            50% { transform: rotate(var(--rotate-mid)) scale(0.95); }
+            70% { transform: rotate(var(--rotate-end)) scale(1.1); }
+            100% { transform: rotate(var(--rotate-end)) scale(1.05); }
+        }
+        .card.enter {
+            animation: jellyEnter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes jellyEnter {
+            0% { transform: rotate(var(--rotate-init)) scale(0.5); opacity: 0; }
+            40% { transform: rotate(var(--rotate-mid)) scale(1.1); opacity: 0.8; }
+            60% { transform: rotate(var(--rotate-mid)) scale(0.9); opacity: 1; }
+            80% { transform: rotate(var(--rotate-end)) scale(1.05); }
+            100% { transform: rotate(var(--rotate-end)) scale(1); }
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #ff6b8a;
+            font-weight: bold;
+            justify-content: center;
+        }
+        .card-header .icon {
+            margin-right: 8px;
+        }
+        .card-content {
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .auto-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 14px;
+            cursor: default;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5px;
+            z-index: 999;
+        }
+        .status-tooltip {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .auto-status:hover + .status-tooltip {
+            opacity: 1;
+        }
+        /* 隐藏音频播放器的可视化控件（关键修改） */
+        .audioplayer {
+            display: none; /* 直接隐藏包含音频元素的容器 */
+        }
+        /* 备用方案：如果需要保留音频元素但隐藏控件，可替换上面的样式为：
+        audio {
+            visibility: hidden; /* 隐藏控件但保留元素占位（无需）
+            width: 0;
+            height: 0;
+            border: none;
+            outline: none;
+        }
+        */
+    </style>
+</head>
+<body>
+    <!-- 弹窗 -->
+    <div class="modal" id="giftModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="icon">🍊</span>神秘的礼物
+            </div>
+            <div class="modal-body">
+                您有一份神秘礼物，确定要打开吗？
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-confirm" id="confirmBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-container" id="cardContainer">
+        <!-- 卡片将通过JS动态生成 -->
+    </div>
+    
+    <!-- 音频元素：保留功能，隐藏可视化控件 -->
+    <div class="audioplayer">
+        <audio id="backgroundMusic" loop preload="metadata">
+            <!-- 移除 controls 属性，避免显示默认控件（关键修改） -->
+            <source src="music/恶作剧 - 林依晨.mp3" type="audio/mpeg">
+            <source src="https://cdn.staticaly.com/gh/ytzong/music/gh-pages/林依晨%20-%20恶作剧.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+        </audio>
+    </div>
+
+    <script>
+        const giftModal = document.getElementById('giftModal');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cardContainer = document.getElementById('cardContainer');
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const tips = [
+            "李代青我想你了",
+            "李代青你超棒的",
+            "李代青多喝水哦~",
+            "李代青顺顺利利",
+            "别太累啦，偶尔偷懒也好",
+            "愿李代青所有烦恼都消失",
+            "李代青记得好好护肤",
+            "李代青今天过得开心嘛",
+            "李代青期待下一次见面",
+            "李代青要相信自己奥",
+            "李代青早点休息，晚安",
+            "李代青今天也要加油呀",
+            "李代青好好吃饭，别亏待自己",
+            "李代青你一笑，世界都亮了",
+            "李代青有你在，很安心"
+        ];
+        const colors = [
+            "rgba(255, 223, 230, 0.9)",
+            "rgba(230, 255, 238, 0.9)",
+            "rgba(230, 245, 255, 0.9)",
+            "rgba(255, 248, 230, 0.9)",
+            "rgba(245, 230, 255, 0.9)"
+        ];
+
+        const AUTO_GENERATE_INTERVAL = 100;
+        const MAX_CARD_COUNT = 800;
+        let autoGenerateTimer;
+        let isMusicPlaying = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            backgroundMusic.volume = 0.7;
+            tryAutoPlay();
+            listenUserInteraction();
+        });
+
+        function tryAutoPlay() {
+            backgroundMusic.play().then(() => {
+                isMusicPlaying = true;
+            }).catch(err => {
+                console.log("初始自动播放需用户交互：", err);
+            });
+        }
+
+        function listenUserInteraction() {
+            const interactionEvents = ['click', 'touchstart', 'keydown'];
+            
+            function handleInteraction() {
+                if (!isMusicPlaying) {
+                    backgroundMusic.play().then(() => {
+                        isMusicPlaying = true;
+                    }).catch(err => {
+                        console.log("播放失败，请检查音乐文件：", err);
+                    });
+                }
+                interactionEvents.forEach(event => {
+                    document.removeEventListener(event, handleInteraction);
+                });
+            }
+            
+            interactionEvents.forEach(event => {
+                document.addEventListener(event, handleInteraction, { once: true });
+            });
+        }
+
+        function ensureMusicPlay() {
+            if (!isMusicPlaying) {
+                backgroundMusic.play().then(() => {
+                    isMusicPlaying = true;
+                });
+            }
+        }
+
+        // 点击确定按钮，隐藏弹窗并初始化卡片
+        confirmBtn.addEventListener('click', () => {
+            giftModal.style.display = 'none';
+            initCards();
+            ensureMusicPlay();
+        });
+
+        function initCards() {
+            for (let i = 0; i < 30; i++) {
+                createCard(true);
+            }
+            startAutoGenerate();
+        }
+
+        function createCard(isInit = false) {
+            if (cardContainer.children.length >= MAX_CARD_COUNT) {
+                stopAutoGenerate();
+                document.querySelector('.auto-status').textContent = '已满';
+                document.querySelector('.status-tooltip').textContent = '已达到最大卡片数量';
+                return;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            const rotateInit = Math.random() * 30 - 15;
+            const rotateMid = Math.random() * 20 - 10;
+            const rotateEnd = Math.random() * 30 - 15;
+            
+            card.style.setProperty('--rotate-init', `${rotateInit}deg`);
+            card.style.setProperty('--rotate-mid', `${rotateMid}deg`);
+            card.style.setProperty('--rotate-end', `${rotateEnd}deg`);
+            
+            const cardWidth = 200;
+            const cardHeight = 120;
+            const maxLeft = window.innerWidth - cardWidth;
+            const statusHeight = 120;
+            const maxTop = window.innerHeight - cardHeight - statusHeight;
+            
+            card.style.left = `${Math.random() * maxLeft}px`;
+            card.style.top = `${Math.random() * maxTop}px`;
+            card.style.transform = `rotate(${rotateInit}deg)`;
+            
+            const icons = ['💖', '✨', '🍊', '🌸', '💐', '🌟', '💝', '🍓', '🥰', '💌'];
+            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+            
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            header.innerHTML = `<span class="icon">${randomIcon}</span>提示`;
+            
+            const content = document.createElement('div');
+            content.className = 'card-content';
+            content.textContent = tips[Math.floor(Math.random() * tips.length)];
+            
+            card.appendChild(header);
+            card.appendChild(content);
+            cardContainer.appendChild(card);
+
+            setTimeout(() => {
+                card.classList.add('enter');
+            }, isInit ? Math.random() * 500 : 10);
+
+            card.addEventListener('click', () => {
+                const currentZIndex = parseInt(card.style.zIndex) || 1;
+                card.style.zIndex = currentZIndex + 10;
+                
+                ensureMusicPlay();
+                
+                const newRotateInit = Math.random() * 30 - 15;
+                const newRotateMid = Math.random() * 20 - 10;
+                const newRotateEnd = Math.random() * 30 - 15;
+                
+                card.style.setProperty('--rotate-init', `${newRotateInit}deg`);
+                card.style.setProperty('--rotate-mid', `${newRotateMid}deg`);
+                card.style.setProperty('--rotate-end', `${newRotateEnd}deg`);
+                
+                card.style.animation = 'none';
+                card.offsetHeight;
+                card.style.animation = 'jellyPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+            });
+        }
+
+        function startAutoGenerate() {
+            autoGenerateTimer = setInterval(() => {
+                createCard();
+            }, AUTO_GENERATE_INTERVAL);
+        }
+
+        function stopAutoGenerate() {
+            clearInterval(autoGenerateTimer);
+        }
+
+        window.addEventListener('resize', () => {
+            const cards = document.querySelectorAll('.card');
+            const cardWidth = 200;
+            const cardHeight = 120;
+            const statusHeight = 120;
+            
+            cards.forEach(card => {
+                const maxLeft = window.innerWidth - cardWidth;
+                const maxTop = window.innerHeight - cardHeight - statusHeight;
+                
+                let left = parseInt(card.style.left) || 0;
+                let top = parseInt(card.style.top) || 0;
+                
+                if (left > maxLeft) left = Math.random() * maxLeft;
+                if (top > maxTop) top = Math.random() * maxTop;
+                
+                card.style.left = `${left}px`;
+                card.style.top = `${top}px`;
+            });
+        });
+    </script>
+</body>
+</html>
